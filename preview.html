@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Lava Lamp</title>
+
+<style>
+
+body{
+margin:0;
+background:#1a1a1a;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+font-family:sans-serif;
+}
+
+/* LAMBA */
+
+#lampContainer{
+position:relative;
+width:200px;
+height:600px;
+}
+
+/* ÜST KAPAK */
+
+#topCap{
+position:absolute;
+top:0;
+width:200px;
+height:50px;
+background:black;
+}
+
+/* CAM */
+
+#glass{
+position:absolute;
+top:50px;
+width:200px;
+height:460px;
+
+background:linear-gradient(
+90deg,
+rgba(255,255,255,0.25),
+rgba(255,255,255,0.05),
+rgba(255,255,255,0.05),
+rgba(255,255,255,0.25)
+);
+
+box-shadow:
+inset 0 0 30px rgba(0,0,0,0.5),
+0 0 40px rgba(255,0,0,0.4);
+
+overflow:hidden;
+}
+
+/* CAM HALKALAR */
+
+.ring{
+position:absolute;
+width:100%;
+height:2px;
+background:rgba(0,0,0,0.2);
+}
+
+.r1{top:80px}
+.r2{top:150px}
+.r3{top:220px}
+.r4{top:290px}
+.r5{top:360px}
+
+/* YANARDAĞ */
+
+#volcano{
+position:absolute;
+bottom:40px;
+left:50%;
+transform:translateX(-50%);
+width:90px;
+height:80px;
+clip-path:polygon(50% 0%,100% 100%,0% 100%);
+background:red;
+box-shadow:0 0 30px red;
+}
+
+/* IŞIK */
+
+#light{
+position:absolute;
+bottom:0;
+width:200px;
+height:120px;
+background:radial-gradient(circle,rgba(255,0,0,0.8),transparent);
+filter:blur(20px);
+}
+
+/* ALT TABAN */
+
+#base{
+position:absolute;
+bottom:-80px;
+width:200px;
+height:80px;
+background:black;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+/* BUTON */
+
+#button{
+width:30px;
+height:30px;
+border-radius:50%;
+background:#333;
+box-shadow:inset 0 0 10px #000;
+cursor:pointer;
+}
+
+canvas{
+position:absolute;
+}
+
+/* AYAR */
+
+#settingsBtn{
+position:fixed;
+top:15px;
+right:15px;
+background:#222;
+color:white;
+border:none;
+padding:10px;
+border-radius:10px;
+font-size:18px;
+cursor:pointer;
+}
+
+#panel{
+position:fixed;
+top:60px;
+right:15px;
+background:#222;
+color:white;
+padding:15px;
+border-radius:10px;
+width:190px;
+display:none;
+}
+
+#panel input{
+width:100%;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="lampContainer">
+
+<div id="topCap"></div>
+
+<div id="glass">
+
+<canvas id="c"></canvas>
+
+<div class="ring r1"></div>
+<div class="ring r2"></div>
+<div class="ring r3"></div>
+<div class="ring r4"></div>
+<div class="ring r5"></div>
+
+<div id="volcano"></div>
+
+<div id="light"></div>
+
+</div>
+
+<div id="base">
+<div id="button"></div>
+</div>
+
+</div>
+
+<button id="settingsBtn">⚙️</button>
+
+<div id="panel">
+
+<label>Lav Rengi</label>
+<input type="color" id="color" value="#ff0000">
+
+<label>Hız</label>
+<input type="range" id="speed" min="0.5" max="4" step="0.1" value="1">
+
+<label>Lav Sayısı</label>
+<input type="range" id="count" min="3" max="20" value="8">
+
+<label>Işık Gücü</label>
+<input type="range" id="glow" min="5" max="60" value="25">
+
+</div>
+
+<script>
+
+const canvas=document.getElementById("c")
+const ctx=canvas.getContext("2d")
+
+canvas.width=200
+canvas.height=460
+
+let blobs=[]
+let blobCount=8
+let speed=1
+let color="#ff0000"
+let glow=25
+
+class Blob{
+
+constructor(){
+
+this.x=100+Math.random()*40-20
+this.y=420
+this.r=20+Math.random()*30
+this.vy=Math.random()*0.6+0.2
+
+}
+
+update(){
+
+this.y-=this.vy*speed
+this.x+=Math.sin(this.y*0.05)*0.5
+
+if(this.y<-50){
+this.y=420
+}
+
+}
+
+draw(){
+
+let g=ctx.createRadialGradient(
+this.x,this.y,0,
+this.x,this.y,this.r
+)
+
+g.addColorStop(0,color)
+g.addColorStop(1,"transparent")
+
+ctx.fillStyle=g
+
+ctx.beginPath()
+ctx.arc(this.x,this.y,this.r,0,Math.PI*2)
+ctx.fill()
+
+}
+
+}
+
+function createBlobs(){
+
+blobs=[]
+
+for(let i=0;i<blobCount;i++){
+blobs.push(new Blob())
+}
+
+}
+
+createBlobs()
+
+function animate(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+ctx.filter="blur(25px)"
+ctx.globalCompositeOperation="lighter"
+
+blobs.forEach(b=>{
+b.update()
+b.draw()
+})
+
+ctx.filter="none"
+
+requestAnimationFrame(animate)
+
+}
+
+animate()
+
+/* AYARLAR */
+
+document.getElementById("speed").oninput=e=>{
+speed=e.target.value
+}
+
+document.getElementById("color").oninput=e=>{
+
+color=e.target.value
+
+document.getElementById("volcano").style.background=color
+document.getElementById("volcano").style.boxShadow="0 0 30px "+color
+
+}
+
+document.getElementById("count").oninput=e=>{
+blobCount=e.target.value
+createBlobs()
+}
+
+document.getElementById("glow").oninput=e=>{
+glow=e.target.value
+}
+
+document.getElementById("settingsBtn").onclick=()=>{
+
+let p=document.getElementById("panel")
+
+p.style.display=p.style.display=="none"?"block":"none"
+
+}
+
+/* BUTON */
+
+document.getElementById("button").onclick=()=>{
+
+blobs.forEach(b=>{
+
+b.x=100+Math.random()*60-30
+b.y=200+Math.random()*200
+
+})
+
+}
+
+</script>
+
+</body>
+</html>
